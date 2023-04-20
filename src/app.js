@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import joi from "joi";
-import dayjs from 'dayjs'
+import {v4 as uuid} from "uuid"
 import bcrypt from "bcrypt"
 const app = express();
 
@@ -47,9 +47,22 @@ app.post("/cadastro", async (req, res) => {
 })
 
 app.post("/", async (req, res) => {
-    
-    try{
+    const {email, password} = req.body;
 
+    const loginSchema = joi.object({
+        email: joi.string().email().required(),
+        password: joi.string().required().min(3)
+    })
+    const validation = loginSchema.validate(req.body, {abortEarly: false});
+    if(validation.error) return res.status(422).send(validation.error.details);
+    try{
+        const user = await db.collection("users").findOne({email})
+        if(!user) return res.status(404).send("Email não cadastrado")
+        const passValidation = bcrypt.compareSync(password, user.password)
+        if(!passValidation) return res.status(401).send("Senha incorreta")
+        const token = uuid()
+        await db.collection("sessions").insertOne({token, idUser: user._id})
+        res.status(200).send(token)
     } catch (erro) {
         return res.status(500).send(erro.message)
     }
