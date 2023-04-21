@@ -92,7 +92,8 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
                 token: validationToken.token,
                 valor: (valor*1),
                 description: description,
-                data: dayjs().format('DD/MM')
+                data: dayjs().format('DD/MM'),
+                exactTime: Date.now()
             })
         } else if (tipo === "saida"){
             await db.collection("out").insertOne({
@@ -100,7 +101,8 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
                 token: validationToken.token,
                 valor: (valor*-1),
                 description: description,
-                data: dayjs().format('DD/MM')
+                data: dayjs().format('DD/MM'),
+                exactTime: Date.now()
             })
         }
         res.send("pamonha") 
@@ -111,9 +113,23 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
 })
 
 app.get("/home", async (req, res) => {
-    
-    try{
+    const {authorization} = req.headers;
 
+    if(!authorization) return res.status(401).send("Acesso não autorizado");
+    const token = authorization?.replace("Bearer ", "")
+    try{
+        const session = await db.collection("sessions").findOne({token});
+        console.log(session)
+        if(!session) return res.status(401).send("token inválido")
+        const bankTransitionOut = await db.collection("out").find({
+            idUser: session.idUser
+        }).toArray();
+        const bankTransitionIncoming = await db.collection("incoming").find({
+            idUser: session.idUser
+        }).toArray();
+        const sortedBalance = [...bankTransitionOut, ...bankTransitionIncoming];
+        const sorted = sortedBalance.sort((a, b) =>  b.exactTime - a.exactTime);
+        res.send(sorted)
     } catch (erro) {
         return res.status(500).send(erro.message)
     }
