@@ -90,14 +90,16 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
             await db.collection("incoming").insertOne({
                 idUser: validationToken.idUser,
                 token: validationToken.token,
-                valor: valor,
+                valor: (valor*1),
+                description: description,
                 data: dayjs().format('DD/MM')
             })
         } else if (tipo === "saida"){
             await db.collection("out").insertOne({
                 idUser: validationToken.idUser,
                 token: validationToken.token,
-                valor: valor,
+                valor: (valor*-1),
+                description: description,
                 data: dayjs().format('DD/MM')
             })
         }
