@@ -30,17 +30,22 @@ app.post("/cadastro", async (req, res) => {
         password: joi.string().required().min(3)
     })
     const validation = registerSchema.validate(req.body, {abortEarly: false});
-    if(validation.error) return res.status(422).send(validation.error.details);
+
+    if(validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message)
+        return res.status(422).send(errors)
+    }
+
     try{
         const emailValidation = await db.collection("users").findOne({email})
-        if(emailValidation) return res.status(409).send("Email já cadastrado")
+        if(emailValidation) return res.status(409).send("email already exists")
         const encryptedPass = (bcrypt.hashSync(password, 10));
         await db.collection("users").insertOne({
             name: name,
             email: email,
             password: encryptedPass
         })
-        res.status(200).send("Conta criada com sucesso")
+        res.status(201).send("Conta criada com sucesso")
     } catch (erro) {
         return res.status(500).send(erro.message)
     }
