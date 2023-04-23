@@ -60,14 +60,17 @@ app.post("/", async (req, res) => {
         password: joi.string().required().min(3)
     })
     const validation = loginSchema.validate(req.body, {abortEarly: false});
-    if(validation.error) return res.status(422).send(validation.error.details);
+    if(validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message)
+        return res.status(422).send(errors)
+    }
     try{
         const user = await db.collection("users").findOne({email})
         if(!user) return res.status(404).send("Email não cadastrado")
         const passValidation = bcrypt.compareSync(password, user.password)
         if(!passValidation) return res.status(401).send("Senha incorreta")
         const token = uuid()
-        await db.collection("sessions").insertOne({token, idUser: user._id})
+        await db.collection("sessions").insertOne({token, idUser: user._id, name: user.name})
         res.status(200).send(token)
     } catch (erro) {
         return res.status(500).send(erro.message)
@@ -93,6 +96,7 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
         if(!validationToken) return res.status(401).send("Invalid token");
         if(tipo === "entrada"){
             await db.collection("incoming").insertOne({
+                name: validationToken.name,
                 idUser: validationToken.idUser,
                 token: validationToken.token,
                 valor: (valor*1),
@@ -102,6 +106,7 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
             })
         } else if (tipo === "saida"){
             await db.collection("out").insertOne({
+                name: validationToken.name,
                 idUser: validationToken.idUser,
                 token: validationToken.token,
                 valor: (valor*-1),
