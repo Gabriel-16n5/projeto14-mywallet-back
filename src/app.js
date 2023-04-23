@@ -71,7 +71,11 @@ app.post("/", async (req, res) => {
         if(!passValidation) return res.status(401).send("Senha incorreta")
         const token = uuid()
         await db.collection("sessions").insertOne({token, idUser: user._id, name: user.name})
-        res.status(200).send(token)
+        const data = {
+            token,
+            name: user.name
+        }
+        res.status(200).send(data)
     } catch (erro) {
         return res.status(500).send(erro.message)
     }
