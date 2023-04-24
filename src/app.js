@@ -150,4 +150,6 @@ app.get("/home", async (req, res) => {
     
 })
 
-app.listen(5000, () => console.log("servidor rodando na porta 5000"))
+    const PORT = process.env.PORT || 8000;
+
+app.listen(PORT, () => console.log("servidor rodando na porta 5000"))
