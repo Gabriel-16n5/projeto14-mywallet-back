@@ -87,7 +87,7 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
     const {tipo} = req.params;
     const {authorization} = req.headers;
     if(tipo != "entrada" && tipo != "saida") return res.status(404).send("tipo errado");
-    const token = authorization?.replace("Bearer ", "");
+    const token = authorization?.replace("Bearer ", "")
 
     const currencySchema = joi.object({
         valor: joi.number().min(0).required(),
