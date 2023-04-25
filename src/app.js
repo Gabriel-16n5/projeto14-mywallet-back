@@ -12,12 +12,12 @@ app.use(cors());
 app.use(express.json());
 dotenv.config();
 
-const mongoCLient = new MongoClient(process.env.DATABASE_URL)
+const mongoCLient = new MongoClient(process.env.DATABASE_URL);
     try{
         await mongoCLient.connect()
-        console.log("conexão com db feita")
+        console.log("db connection established")
     }catch (erro) {
-        console.log("não conectou com o db")
+        console.log("connection to db not established")
     }
 const db = mongoCLient.db();
 
@@ -34,7 +34,7 @@ app.post("/cadastro", async (req, res) => {
     if(validation.error) {
         const errors = validation.error.details.map((detail) => detail.message)
         return res.status(422).send(errors)
-    }
+    };
 
     try{
         const emailValidation = await db.collection("users").findOne({email})
@@ -45,12 +45,12 @@ app.post("/cadastro", async (req, res) => {
             email: email,
             password: encryptedPass
         })
-        res.status(201).send("Conta criada com sucesso")
+        res.status(201).send("Account created successfully")
     } catch (erro) {
         return res.status(500).send(erro.message)
     }
 
-})
+});
 
 app.post("/", async (req, res) => {
     const {email, password} = req.body;
@@ -66,9 +66,9 @@ app.post("/", async (req, res) => {
     }
     try{
         const user = await db.collection("users").findOne({email})
-        if(!user) return res.status(404).send("Email não cadastrado")
+        if(!user) return res.status(404).send("Email not found")
         const passValidation = bcrypt.compareSync(password, user.password)
-        if(!passValidation) return res.status(401).send("Senha incorreta")
+        if(!passValidation) return res.status(401).send("incorrect password")
         const token = uuid()
         await db.collection("sessions").insertOne({token, idUser: user._id, name: user.name})
         const data = {
@@ -86,7 +86,7 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
     const {valor, description} = req.body;
     const {tipo} = req.params;
     const {authorization} = req.headers;
-    if(tipo != "entrada" && tipo != "saida") return res.status(404).send("tipo errado");
+    if(tipo != "entrada" && tipo != "saida") return res.status(404).send("page does not exist");
     const token = authorization?.replace("Bearer ", "")
 
     const currencySchema = joi.object({
@@ -119,7 +119,7 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
                 exactTime: Date.now()
             })
         }
-        res.send("pamonha") 
+        res.send("Olá pessoa, beba água, é importante <3") 
     } catch (erro) {
         return res.status(500).send(erro.message)
     }
@@ -129,12 +129,12 @@ app.post("/nova-transacao/:tipo", async (req, res) => {
 app.get("/home", async (req, res) => {
     const {authorization} = req.headers;
 
-    if(!authorization) return res.status(401).send("Acesso não autorizado");
+    if(!authorization) return res.status(401).send("Unauthorized access");
     const token = authorization?.replace("Bearer ", "")
     try{
         const session = await db.collection("sessions").findOne({token});
         console.log(session)
-        if(!session) return res.status(401).send("token inválido")
+        if(!session) return res.status(401).send("invalid token")
         const bankTransitionOut = await db.collection("out").find({
             idUser: session.idUser
         }).toArray();
@@ -152,4 +152,4 @@ app.get("/home", async (req, res) => {
 
     const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => console.log("servidor rodando na porta 5000"))
+app.listen(PORT, () => console.log("server running on port 8000 || or who knows"))
