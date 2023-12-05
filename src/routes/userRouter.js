@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { home, transactions } from "../controllers/userController.js";
+import { Router } from 'express';
+import { homePage, ttransactionsHistory } from '../controllers/userController.js';
 
-const userRouter = Router()
+const userRouter = Router();
 
-userRouter.post("/nova-transacao/:tipo", transactions)
-userRouter.get("/home", home)
+userRouter.post('/nova-transacao/:type', ttransactionsHistory);
+userRouter.get('/home', homePage);
 
 export default userRouter;
