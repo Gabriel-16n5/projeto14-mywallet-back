@@ -53,7 +53,6 @@ export async function home (req, res) {
     const token = authorization?.replace("Bearer ", "")
     try{
         const session = await db.collection("sessions").findOne({token});
-        console.log(session)
         if(!session) return res.status(401).send("invalid token")
         const bankTransitionOut = await db.collection("out").find({
             idUser: session.idUser
